@@ -65,8 +65,12 @@
 
       blobLayer: (centerX, centerY, radius, variance) => {
         let poly1 = Generator.poly(centerX, centerY, radius, 15);
-        poly1 = Generator.distortPoly(poly1, variance * 2);
-        for (let i = 0; i < 4; i++) {
+        // distrot
+        for (let i = 0; i < 6; i++) {
+          poly1 = Generator.distortPoly(poly1, variance);
+        }
+        // deform
+        for (let i = 0; i < 5; i++) {
           poly1 = Generator.deformPoly(poly1, variance);
         }
         return poly1;
@@ -79,10 +83,10 @@
           upperLayers: [],
         }
 
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 25; i++) {
           result.lowerLayers.push(Generator.blobLayer(centerX, centerY, radius, 20));
         }
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 15; i++) {
           result.midLayers.push(Generator.blobLayer(centerX, centerY, radius, 15));
         }
         for (let i = 0; i < 5; i++) {
@@ -134,20 +138,20 @@
       }
     }
 
-    function renderBlob(ctx, blob, hex) {
+    function renderBlob(ctx, blob, hex, alphaModifier = 0) {
       renderLayers(ctx, blob.lowerLayers, {
         fill: hex,
-        alpha: 0.01
+        alpha: 0.025 - alphaModifier
       });
 
       renderLayers(ctx, blob.midLayers, {
         fill: hex,
-        alpha: 0.02
+        alpha: 0.0375 - alphaModifier
       });
 
       renderLayers(ctx, blob.upperLayers, {
         fill: hex,
-        alpha: 0.05
+        alpha: 0.05 - alphaModifier
       });
     }
 
@@ -155,13 +159,19 @@
       var ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const blob1 = Generator.blob(200, 200, 120);
-      const hue1 = Math.floor(Math.random() * 255);
-      renderBlob(ctx, blob1, hslToHex(hue1, 70, 50));
+      const baseHue = Math.floor(Math.random() * 360);
 
-      const blob2 = Generator.blob(335, 245, 165);
-      const hue2 = Math.floor(Math.random() * 255);
-      renderBlob(ctx, blob2, hslToHex(hue2, 60, 60));
+      const blob3 = Generator.blob(400, 10, 50);
+      const hueVariance2 = 10 * Math.random();
+      renderBlob(ctx, blob3, hslToHex(hueWrap(baseHue - hueVariance2), 60, 80), 0.01);
+
+      const blob1 = Generator.blob(200, 180, 70);      
+      renderBlob(ctx, blob1, hslToHex(baseHue, 70, 50));
+
+      const blob2 = Generator.blob(400, 245, 125);
+      // Create a "mostly complementary" color
+      const hueVariance = 140 + (40 * Math.random());
+      renderBlob(ctx, blob2, hslToHex(hueWrap(baseHue + hueVariance), 60, 50));
     }
 
     window.onload = render;
@@ -169,6 +179,14 @@
 
   <script>
     // --- UTILITIES ---
+
+    // Given a hue value, wrap any value > 360 back around
+    function hueWrap(h) {
+      if (h > 360) {
+        return hueWrap(h - 360);
+      }
+      return h;
+    }
 
     // From: https://stackoverflow.com/questions/36721830/convert-hsl-to-rgb-and-hex
     function hslToHex(h, s, l) {
@@ -191,29 +209,31 @@
       return z * stdev + mean;
     }
   </script>
-  <body>
-    <canvas id="canvas" height="600" width="800"></canvas>
+  <body style="margin: 0; padding: 0">
+    <canvas id="canvas" height="600" width="1000"></canvas>
 
-    <h4 style="padding-top: 50px;">Source</h4>
-    <ul>
-      <li><a href="https://github.com/tstone/art-gen/blob/main/watercolor.html">Github</a></li>
-    </ul>
+    <div style="padding: 50px;">
+      <h4>Source</h4>
+      <ul>
+        <li><a href="https://github.com/tstone/art-gen/blob/main/watercolor.html">Github</a></li>
+      </ul>
 
-    <h4>References</h4>
-    <ul>
-      <li>
-        <a href="https://tylerxhobbs.com/essays/2020/how-to-hack-a-painting">How to Hack a Painting</a>
-      </li>
-      <li>
-        <a href="https://tylerxhobbs.com/essays/2017/a-generative-approach-to-simulating-watercolor-paints">A Guide to Simulating Watercolor Paint with Generative Art</a>
-      </li>
-      <li>
-        <a href="https://sighack.com/post/generative-watercolor-in-processing">Generative Watercolor in Processing</a>
-      </li>
-      <li>
-        <a href="https://stackoverflow.com/a/36481059">Gaussian Distribution in Javascript</a>
-      </li>
-    </ul>
+      <h4>References</h4>
+      <ul>
+        <li>
+          <a href="https://tylerxhobbs.com/essays/2020/how-to-hack-a-painting">How to Hack a Painting</a>
+        </li>
+        <li>
+          <a href="https://tylerxhobbs.com/essays/2017/a-generative-approach-to-simulating-watercolor-paints">A Guide to Simulating Watercolor Paint with Generative Art</a>
+        </li>
+        <li>
+          <a href="https://sighack.com/post/generative-watercolor-in-processing">Generative Watercolor in Processing</a>
+        </li>
+        <li>
+          <a href="https://stackoverflow.com/a/36481059">Gaussian Distribution in Javascript</a>
+        </li>
+      </ul>
+    </div>
 
     <button style="position: absolute; top: 20px; right: 20px; font-size: 18px; z-index: 100" onclick="render()">Rerender</button>
   </body>
