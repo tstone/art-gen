@@ -79,13 +79,13 @@
           upperLayers: [],
         }
 
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 30; i++) {
           result.lowerLayers.push(Generator.blobLayer(centerX, centerY, radius, 20));
         }
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 20; i++) {
           result.midLayers.push(Generator.blobLayer(centerX, centerY, radius, 15));
         }
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 5; i++) {
           result.upperLayers.push(Generator.blobLayer(centerX, centerY, radius, 9));
         }
 
@@ -137,17 +137,17 @@
     function renderBlob(ctx, blob, hex) {
       renderLayers(ctx, blob.lowerLayers, {
         fill: hex,
-        alpha: 0.0075
+        alpha: 0.01
       });
 
       renderLayers(ctx, blob.midLayers, {
         fill: hex,
-        alpha: 0.01
+        alpha: 0.02
       });
 
       renderLayers(ctx, blob.upperLayers, {
         fill: hex,
-        alpha: 0.01
+        alpha: 0.05
       });
     }
 
