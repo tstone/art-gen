@@ -1,0 +1,215 @@
+<html>
+  <script>
+    // --- GENERATION ---
+
+    const TWO_PI = Math.PI * 2.0;
+
+    const Generator = {
+
+      poly: (centerX, centerY, radius, sides) => {
+        const points = [];
+        const angle = TWO_PI / sides;
+
+        for (let a = 0; a < TWO_PI; a += angle) {
+          const x = centerX + (Math.cos(a) * radius);
+          const y = centerY + (Math.sin(a) * radius);
+          points.push([x, y]);
+        }
+
+        return points;
+      },
+
+      deformSegment(lineStart, lineEnd, variance) {
+        const midX = (lineStart[0] + lineEnd[0]) / 2.0;
+        const midY = (lineStart[1] + lineEnd[1]) / 2.0;
+        
+        return  [
+          midX + (gaussianRandom() * variance),
+          midY + (gaussianRandom() * variance),
+        ];
+      },
+
+      // Adds deformation between polygon line segments
+      deformPoly: (points, variance) => {
+        const deformedPoints = [];
+        for (let i = 0; i < points.length; i++) {
+          const previous = i == 0 ? points.length - 1 : i - 1;
+          const lineStart = points[previous];
+          const lineEnd = points[i];
+
+          const additionalPoint = Generator.deformSegment(lineStart, lineEnd, variance);
+          deformedPoints.push(additionalPoint);
+          
+          // Sometimes, randomly add a second deformation
+          if (gaussianRandom() > 0.5) {
+            const bonusDeformationPoint = Generator.deformSegment(additionalPoint, lineEnd, variance * 2);
+            deformedPoints.push(bonusDeformationPoint);
+          }
+          
+          deformedPoints.push(points[i]);
+        }
+        return deformedPoints;
+      },
+
+      // Randomly moves the point of a polygon without adding new segments
+      distortPoly: (points, variance) => {
+        const distortedPoints = [];
+        for (let i = 0; i < points.length; i++) {
+          distortedPoints.push([
+            points[i][0] + (gaussianRandom() * variance),
+            points[i][1] + (gaussianRandom() * variance),
+          ]);
+        }
+        return distortedPoints;
+      },
+
+      blobLayer: (centerX, centerY, radius, variance) => {
+        let poly1 = Generator.poly(centerX, centerY, radius, 15);
+        poly1 = Generator.distortPoly(poly1, variance * 2);
+        for (let i = 0; i < 4; i++) {
+          poly1 = Generator.deformPoly(poly1, variance);
+        }
+        return poly1;
+      },
+
+      blob: (centerX, centerY, radius) => {
+        const result = {
+          lowerLayers: [],
+          midLayers: [],
+          upperLayers: [],
+        }
+
+        for (let i = 0; i < 40; i++) {
+          result.lowerLayers.push(Generator.blobLayer(centerX, centerY, radius, 20));
+        }
+        for (let i = 0; i < 30; i++) {
+          result.midLayers.push(Generator.blobLayer(centerX, centerY, radius, 15));
+        }
+        for (let i = 0; i < 20; i++) {
+          result.upperLayers.push(Generator.blobLayer(centerX, centerY, radius, 9));
+        }
+
+        return result;
+      },
+
+    }
+  </script>
+
+  <script>
+    // --- RENDERING ---
+
+    /**
+     * Options:
+     *    fill = HTML color of fill (default 'black')
+     *    offetX = offset x
+     *    offetY = offset y
+     * */
+    function renderPoly(ctx, points, options) {
+      options ||= {};
+      
+      ctx.fillStyle = options.fill || 'black';
+      if (options.alpha) {
+        ctx.globalAlpha = options.alpha;
+      }
+
+      const offsetX = options.offsetX || 0;
+      const offsetY = options.offsetY || 0;
+      ctx.beginPath();
+
+      for (let i = 0; i < points.length; i++) {
+        const point = [points[i][0] + offsetX, points[i][1] + offsetY];
+        if (i == 0) {
+          ctx.moveTo(...point);
+        } else {
+          ctx.lineTo(...point);
+        }
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function renderLayers(ctx, layers, options) {
+      for (let i = 0; i < layers.length; i++) {
+        renderPoly(ctx, layers[i], options);
+      }
+    }
+
+    function renderBlob(ctx, blob, hex) {
+      renderLayers(ctx, blob.lowerLayers, {
+        fill: hex,
+        alpha: 0.0075
+      });
+
+      renderLayers(ctx, blob.midLayers, {
+        fill: hex,
+        alpha: 0.01
+      });
+
+      renderLayers(ctx, blob.upperLayers, {
+        fill: hex,
+        alpha: 0.01
+      });
+    }
+
+    function render() {
+      var ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const blob1 = Generator.blob(200, 200, 120);
+      const hue1 = Math.floor(Math.random() * 255);
+      renderBlob(ctx, blob1, hslToHex(hue1, 70, 50));
+
+      const blob2 = Generator.blob(335, 245, 165);
+      const hue2 = Math.floor(Math.random() * 255);
+      renderBlob(ctx, blob2, hslToHex(hue2, 60, 60));
+    }
+
+    window.onload = render;
+  </script>
+
+  <script>
+    // --- UTILITIES ---
+
+    // From: https://stackoverflow.com/questions/36721830/convert-hsl-to-rgb-and-hex
+    function hslToHex(h, s, l) {
+      l /= 100;
+      const a = s * Math.min(l, 1 - l) / 100;
+      const f = n => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
+      };
+      return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
+    // From: https://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-bell-curve
+    function gaussianRandom(mean=0, stdev=1) {
+      const u = 1 - Math.random(); // Converting [0,1) to (0,1]
+      const v = Math.random();
+      const z = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+      // Transform to the desired mean and standard deviation:
+      return z * stdev + mean;
+    }
+  </script>
+  <body>
+    <canvas id="canvas" height="600" width="800"></canvas>
+
+    <h4 style="padding-top: 100px;">References</h4>
+    <ul>
+      <li>
+        <a href="https://tylerxhobbs.com/essays/2020/how-to-hack-a-painting">How to Hack a Painting</a>
+      </li>
+      <li>
+        <a href="https://tylerxhobbs.com/essays/2017/a-generative-approach-to-simulating-watercolor-paints">A Guide to Simulating Watercolor Paint with Generative Art</a>
+      </li>
+      <li>
+        <a href="https://sighack.com/post/generative-watercolor-in-processing">Generative Watercolor in Processing</a>
+      </li>
+      <li>
+        <a href="https://stackoverflow.com/a/36481059">Gaussian Distribution in Javascript</a>
+      </li>
+    </ul>
+
+    <button style="position: absolute; top: 20px; right: 20px; font-size: 18px; z-index: 100" onclick="render()">Rerender</button>
+  </body>
+</html>
