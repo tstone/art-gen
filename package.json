@@ -10,7 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.3.4"
+    "colorsea": "^1.2.1",
+    "oklab.ts": "^2.2.0",
+    "pure-rand": "^6.0.4",
+    "vue": "^3.3.4",
+    "vuetify": "^3.4.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",
