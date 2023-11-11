@@ -78,8 +78,8 @@ const currentStrategy = computed(() => {
 const tab = ref(null);
 const seed = ref(0);
 
-const baseHue = ref(0);
-const baseSat = ref(100);
+const baseHue = ref(Math.random() * 360);
+const baseSat = ref(50);
 
 const baseHsl = computed(() => {
   return `hsl(${baseHue.value}deg, ${baseSat.value}%, 50%)`;
