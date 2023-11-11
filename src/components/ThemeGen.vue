@@ -154,7 +154,7 @@ const fullPaletteHsl = computed(() => {
 });
 
 const theme = computed(() => {
-  return currentStrategy.value.apply(fullPaletteOklab.value);
+  return currentStrategy.value.apply(fullPaletteOklab.value, seed.value);
 });
 </script>
 

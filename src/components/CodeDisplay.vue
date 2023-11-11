@@ -53,17 +53,17 @@ const valueStyle = computed(() => {
   return `color: ${props.theme.quaternaryAlt.renderCss}`;
 });
 
-const stringStyle = computed(() => {
-  return `color: ${props.theme.tertiaryAlt.renderCss}`;
-});
+// const stringStyle = computed(() => {
+//   return `color: ${props.theme.tertiaryAlt.renderCss}`;
+// });
 
 const punctuationStyle = computed(() => {
   return `color: ${props.theme.quaternary.renderCss}`;
 });
 
-const backgroundStyle = computed(() => {
+// const backgroundStyle = computed(() => {
 
-});
+// });
 
 const darkStyle = computed(() => {
   return `color: ${props.theme.dark.renderCss}`;

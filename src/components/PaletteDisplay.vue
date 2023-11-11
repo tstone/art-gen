@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { Color } from '../lib/palette-color';
+import { Color } from '../lib/types';
 
 const previewColor = ref();
 const selectedColor = ref();
